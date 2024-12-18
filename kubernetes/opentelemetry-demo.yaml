@@ -8246,6 +8246,46 @@ data:
       "weekStart": ""
     }
 ---
+# Source: opentelemetry-demo/templates/otel-collector-sidecar-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opentelemetry-demo-otel-collector-sidecar-config
+  namespace: otel-demo
+  labels:
+    
+    opentelemetry.io/name: opentelemetry-demo
+    app.kubernetes.io/instance: opentelemetry-demo
+    app.kubernetes.io/name: opentelemetry-demo
+    app.kubernetes.io/version: "1.12.0"
+    app.kubernetes.io/part-of: opentelemetry-demo
+data:
+  
+  otel-collector-sidecar-config.yaml: |
+    receivers:
+      filelog:
+        include:
+          - /logs/*.log
+        start_at: beginning
+        operators:
+          - type: regex_parser
+            regex: '^(?P<timestamp>\S+)\s+(?P<level>[A-Z]+)\s+(?P<message>.*)$'
+            timestamp:
+              parse_from: timestamp
+              format: '%Y-%m-%dT%H:%M:%S'
+  
+    exporters:
+      otlp:
+        endpoint: "http://opentelemetry-demo-otelcol:4317"
+        tls:
+          insecure: true
+  
+    service:
+      pipelines:
+        logs:
+          receivers: [filelog]
+          exporters: [otlp]
+---
 # Source: opentelemetry-demo/charts/grafana/templates/clusterrole.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -8735,6 +8775,9 @@ spec:
     - port: 8080
       name: tcp-service
       targetPort: 8080
+    - port: 4317
+      name: tcp-service-0
+      targetPort: 4317
   selector:
     
     opentelemetry.io/name: opentelemetry-demo-checkoutservice
@@ -9734,6 +9777,8 @@ spec:
         app.kubernetes.io/instance: opentelemetry-demo
         app.kubernetes.io/component: checkoutservice
         app.kubernetes.io/name: opentelemetry-demo-checkoutservice
+      annotations:
+        sidecar.otel.logs.enabled: "true"
     spec:
       serviceAccountName: opentelemetry-demo
       containers:
@@ -9776,12 +9821,54 @@ spec:
               value: "8013"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://$(OTEL_COLLECTOR_NAME):4317
+            - name: OTEL_LOGS_EXPORTER
+              value: otel
+            - name: OTEL_LOG_RECORDS_TYPE
+              value: json
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=1.12.0
           resources:
             limits:
-              memory: 20Mi
+              memory: 64Mi
           volumeMounts:
+            - name: log-volume
+              mountPath: /logs
+        - name: otel-collector-sidecar
+          image: 'otel/opentelemetry-collector-contrib:1.12.0-otelcollectorsidecar'
+          imagePullPolicy: IfNotPresent
+          command:
+            - /otel-collector
+            - --config=/etc/otel/otel-collector-sidecar-config.yaml
+          ports:
+            
+            - containerPort: 4317
+              name: service
+          env:
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: 'opentelemetry-demo-otelcol'
+            - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+              value: cumulative
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://$(OTEL_COLLECTOR_NAME):4317
+            - name: OTEL_LOGS_EXPORTER
+              value: otel
+            - name: OTEL_LOG_RECORDS_TYPE
+              value: json
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=1.12.0
+          resources:
+            limits:
+              memory: 64Mi
+          volumeMounts:
+            - mountPath: /logs
+              name: log-volume
+            - mountPath: /etc/otel
+              name: otel-collector-config
       initContainers:
         - command:
           - sh
@@ -9791,6 +9878,8 @@ spec:
           image: busybox:latest
           name: wait-for-kafka
       volumes:
+        - name: log-volume
+          emptyDir: {}
 ---
 # Source: opentelemetry-demo/templates/component.yaml
 apiVersion: apps/v1
