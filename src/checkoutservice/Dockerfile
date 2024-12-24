@@ -23,4 +23,4 @@ WORKDIR /usr/src/app/
 COPY --from=builder /go/bin/checkoutservice/ ./
 
 EXPOSE ${CHECKOUT_SERVICE_PORT}
-ENTRYPOINT [ "./checkoutservice" ]
+ENTRYPOINT ["/bin/sh", "-c", "./checkoutservice 2>&1 | tee /logs/checkoutservice.log"]
