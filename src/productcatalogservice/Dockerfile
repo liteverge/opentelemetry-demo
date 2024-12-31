@@ -24,4 +24,4 @@ COPY ./src/productcatalogservice/products/ ./products/
 COPY --from=builder /go/bin/productcatalogservice/ ./
 
 EXPOSE ${PRODUCT_SERVICE_PORT}
-ENTRYPOINT [ "./productcatalogservice" ]
+ENTRYPOINT ["/bin/sh", "-c", "./productcatalogservice > >(tee /logs/productcatalogservice.log) 2>/dev/null"]
