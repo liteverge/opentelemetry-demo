@@ -27,13 +27,9 @@
     "@opentelemetry/resource-detector-aws": "1.5.0",
     "@opentelemetry/resource-detector-container": "0.3.9",
     "@opentelemetry/resource-detector-gcp": "0.29.9",
-<<<<<<< HEAD
-    "@opentelemetry/exporter-logs-otlp-http": "^0.57.2",
-=======
     "@opentelemetry/resources": "1.24.1",
     "@opentelemetry/sdk-metrics": "1.24.1",
     "@opentelemetry/sdk-node": "0.51.1",
->>>>>>> 37190b3 (use pino instrumentation)
     "grpc-js-health-check": "1.1.0",
     "pino": "8.16.1",
     "simple-card-validator": "1.1.0",
