@@ -60,14 +60,17 @@ module.exports.charge = async request => {
   });
 
   if (!valid) {
+    logger.error('Credit card info is invalid.')
     throw new Error('Credit card info is invalid.');
   }
 
   if (!['visa', 'mastercard'].includes(cardType)) {
+    logger.error(`Sorry, we cannot process ${cardType} credit cards. Only VISA or MasterCard is accepted.`);
     throw new Error(`Sorry, we cannot process ${cardType} credit cards. Only VISA or MasterCard is accepted.`);
   }
 
   if ((currentYear * 12 + currentMonth) > (year * 12 + month)) {
+    logger.error(`The credit card (ending ${lastFourDigits}) expired on ${month}/${year}.`);
     throw new Error(`The credit card (ending ${lastFourDigits}) expired on ${month}/${year}.`);
   }
 
