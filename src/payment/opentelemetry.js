@@ -19,6 +19,7 @@ const sdk = new opentelemetry.NodeSDK({
   instrumentations: [
     new PinoInstrumentation(),
     getNodeAutoInstrumentations({
+
       // only instrument fs if it is part of another trace
       '@opentelemetry/instrumentation-fs': {
         requireParentSpan: true,
