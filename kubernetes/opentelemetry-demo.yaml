@@ -8965,13 +8965,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: opentelemetry-demo-loadgenerator
+  name: opentelemetry-demo-load-generator
   labels:
     
-    opentelemetry.io/name: opentelemetry-demo-loadgenerator
+    opentelemetry.io/name: opentelemetry-demo-load-generator
     app.kubernetes.io/instance: opentelemetry-demo
-    app.kubernetes.io/component: loadgenerator
-    app.kubernetes.io/name: opentelemetry-demo-loadgenerator
+    app.kubernetes.io/component: load-generator
+    app.kubernetes.io/name: opentelemetry-demo-load-generator
     app.kubernetes.io/version: "1.12.4"
     app.kubernetes.io/part-of: opentelemetry-demo
 spec:
@@ -8982,7 +8982,7 @@ spec:
       targetPort: 8089
   selector:
     
-    opentelemetry.io/name: opentelemetry-demo-loadgenerator
+    opentelemetry.io/name: opentelemetry-demo-load-generator
 ---
 # Source: opentelemetry-demo/templates/component.yaml
 apiVersion: v1
@@ -9003,6 +9003,9 @@ spec:
     - port: 8080
       name: tcp-service
       targetPort: 8080
+    - port: 4317
+      name: tcp-service-0
+      targetPort: 4317
   selector:
     
     opentelemetry.io/name: opentelemetry-demo-paymentservice
@@ -10382,7 +10385,7 @@ spec:
             - name: JAEGER_SERVICE_PORT
               value: "16686"
             - name: LOCUST_WEB_HOST
-              value: 'opentelemetry-demo-loadgenerator'
+              value: 'opentelemetry-demo-load-generator'
             - name: LOCUST_WEB_PORT
               value: "8089"
             - name: OTEL_COLLECTOR_HOST
@@ -10537,13 +10540,13 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: opentelemetry-demo-loadgenerator
+  name: opentelemetry-demo-load-generator
   labels:
     
-    opentelemetry.io/name: opentelemetry-demo-loadgenerator
+    opentelemetry.io/name: opentelemetry-demo-load-generator
     app.kubernetes.io/instance: opentelemetry-demo
-    app.kubernetes.io/component: loadgenerator
-    app.kubernetes.io/name: opentelemetry-demo-loadgenerator
+    app.kubernetes.io/component: load-generator
+    app.kubernetes.io/name: opentelemetry-demo-load-generator
     app.kubernetes.io/version: "1.12.4"
     app.kubernetes.io/part-of: opentelemetry-demo
 spec:
@@ -10552,20 +10555,20 @@ spec:
   selector:
     matchLabels:
       
-      opentelemetry.io/name: opentelemetry-demo-loadgenerator
+      opentelemetry.io/name: opentelemetry-demo-load-generator
   template:
     metadata:
       labels:
         
-        opentelemetry.io/name: opentelemetry-demo-loadgenerator
+        opentelemetry.io/name: opentelemetry-demo-load-generator
         app.kubernetes.io/instance: opentelemetry-demo
-        app.kubernetes.io/component: loadgenerator
-        app.kubernetes.io/name: opentelemetry-demo-loadgenerator
+        app.kubernetes.io/component: load-generator
+        app.kubernetes.io/name: opentelemetry-demo-load-generator
     spec:
       serviceAccountName: opentelemetry-demo
       containers:
-        - name: loadgenerator
-          image: 'ghcr.io/liteverge/opentelemetry-demo:1.12.4-loadgenerator'
+        - name: load-generator
+          image: 'ghcr.io/liteverge/opentelemetry-demo:1.12.4-load-generator'
           imagePullPolicy: IfNotPresent
           ports:
             
@@ -10639,6 +10642,8 @@ spec:
         app.kubernetes.io/instance: opentelemetry-demo
         app.kubernetes.io/component: paymentservice
         app.kubernetes.io/name: opentelemetry-demo-paymentservice
+      annotations:
+        sidecar.otel.logs.enabled: "true"
     spec:
       serviceAccountName: opentelemetry-demo
       containers:
@@ -10677,7 +10682,64 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
           volumeMounts:
+            - name: log-volume
+              mountPath: /logs
+            - name: config-rw
+              mountPath: /etc/otelcol-contrib
+        - name: otel-collector-sidecar
+          image: 'otel/opentelemetry-collector-contrib:latest'
+          imagePullPolicy: IfNotPresent
+          ports:
+            
+            - containerPort: 4317
+              name: service
+          env:
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels['app.kubernetes.io/component']
+            - name: OTEL_COLLECTOR_NAME
+              value: 'opentelemetry-demo-otelcol'
+            - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+              value: cumulative
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://$(OTEL_COLLECTOR_NAME):4317
+            - name: OTEL_LOGS_EXPORTER
+              value: otel
+            - name: OTEL_LOG_RECORDS_TYPE
+              value: json
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version=1.12.4
+          resources:
+            limits:
+              memory: 64Mi
+          volumeMounts:
+            - mountPath: /logs
+              name: log-volume
+            - mountPath: /etc/otelcol-contrib
+              name: config-rw
+      initContainers:
+        - command:
+          - sh
+          - -c
+          - cp /config-ro/otel-collector-sidecar-config.yaml /config-rw/config.yaml && cat
+            /config-rw/config.yaml
+          image: busybox
+          name: init-config
+          volumeMounts:
+          - mountPath: /config-ro
+            name: config-ro
+          - mountPath: /config-rw
+            name: config-rw
       volumes:
+        - name: log-volume
+          emptyDir: {}
+        - name: config-rw
+          emptyDir: {}
+        - configMap:
+            name: 'opentelemetry-demo-otel-collector-sidecar-config'
+          name: config-ro
 ---
 # Source: opentelemetry-demo/templates/component.yaml
 apiVersion: apps/v1
