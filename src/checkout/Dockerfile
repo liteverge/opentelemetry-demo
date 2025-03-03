@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-FROM otel/autoinstrumentation-go:v0.2.1-alpha AS builder
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /usr/src/app/
 
