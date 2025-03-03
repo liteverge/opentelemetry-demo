@@ -3,11 +3,13 @@
 package main
 
 import (
+    "io"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"net"
 	"net/http"
 	"os"
@@ -79,7 +81,13 @@ func init() {
 		TimestampFormat: time.RFC3339Nano,
 	})
 	log.WithContext(ctx)
-	log.SetOutput(os.Stdout)
+    log.SetOutput(io.MultiWriter(os.Stdout, &lumberjack.Logger{
+        Filename:   "/var/logs/application.log",
+        MaxSize:    10, // Max megabytes before log is rotated
+        MaxBackups: 3,  // Max number of old log files to retain
+        MaxAge:     28, // Max number of days to retain old log files
+        Compress:   true, // Compress old log files
+    }))
 }
 
 func initResource() *sdkresource.Resource {
