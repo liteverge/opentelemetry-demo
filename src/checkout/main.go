@@ -82,7 +82,7 @@ func init() {
 	})
 	log.WithContext(ctx)
     log.SetOutput(io.MultiWriter(os.Stdout, &lumberjack.Logger{
-        Filename:   "/var/logs/application.log",
+        Filename:   "/logs/application.log",
         MaxSize:    10, // Max megabytes before log is rotated
         MaxBackups: 3,  // Max number of old log files to retain
         MaxAge:     28, // Max number of days to retain old log files
@@ -296,6 +296,7 @@ func (cs *checkout) PlaceOrder(ctx context.Context, req *pb.PlaceOrderRequest) (
 
 	txID, err := cs.chargeCard(ctx, total, req.CreditCard)
 	if err != nil {
+
 		return nil, status.Errorf(codes.Internal, "failed to charge card: %+v", err)
 	}
 	log.Infof("payment went through (transaction_id: %s)", txID)
@@ -472,6 +473,7 @@ func (cs *checkout) chargeCard(ctx context.Context, amount *pb.Money, paymentInf
 		Amount:     amount,
 		CreditCard: paymentInfo})
 	if err != nil {
+	    log.Errorf("could not charge the card: %+v", err)
 		return "", fmt.Errorf("could not charge the card: %+v", err)
 	}
 	return paymentResp.GetTransactionId(), nil
@@ -483,11 +485,13 @@ func (cs *checkout) sendOrderConfirmation(ctx context.Context, email string, ord
 		"order": order,
 	})
 	if err != nil {
+	    log.Errorf("failed to marshal order to JSON: %+v", err)
 		return fmt.Errorf("failed to marshal order to JSON: %+v", err)
 	}
 
 	resp, err := otelhttp.Post(ctx, cs.emailSvcAddr+"/send_order_confirmation", "application/json", bytes.NewBuffer(emailPayload))
 	if err != nil {
+	    log.Errorf("failed POST to email service: %+v", err)
 		return fmt.Errorf("failed POST to email service: %+v", err)
 	}
 	defer resp.Body.Close()
@@ -504,6 +508,7 @@ func (cs *checkout) shipOrder(ctx context.Context, address *pb.Address, items []
 		Address: address,
 		Items:   items})
 	if err != nil {
+	    log.Errorf("shipment failed: %+v", err)
 		return "", fmt.Errorf("shipment failed: %+v", err)
 	}
 	return resp.GetTrackingId(), nil
@@ -529,7 +534,7 @@ func (cs *checkout) sendToPostProcessor(ctx context.Context, result *pb.OrderRes
 	startTime := time.Now()
 	select {
 	case cs.KafkaProducerClient.Input() <- &msg:
-		log.Infof("Message sent to Kafka: %v", msg)
+// 		log.Infof("Message sent to Kafka: %v", msg)
 		select {
 		case successMsg := <-cs.KafkaProducerClient.Successes():
 			span.SetAttributes(
