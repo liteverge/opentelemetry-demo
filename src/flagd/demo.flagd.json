@@ -135,7 +135,7 @@
 
     },
     "emailMemoryLeak": {
-      "description": "Memory leak in the email service. More description added for the memory leak flag",
+      "description": "Memory leak in the email service.",
       "state": "ENABLED",
       "variants": {
         "off": 0,
