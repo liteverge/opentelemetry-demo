@@ -26,7 +26,7 @@ module.exports.charge = async request => {
 
   await OpenFeature.setProviderAndWait(flagProvider);
 
-  const numberVariant =  await OpenFeature.getClient().getNumberValue("paymentFailure", 0);
+  const numberVariant =  await OpenFeature.getClient().getNumberValue("paymentFailure", 0.25);
 
   if (numberVariant > 0) {
     // n% chance to fail with app.loyalty.level=gold
