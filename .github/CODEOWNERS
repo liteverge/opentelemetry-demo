@@ -2,4 +2,5 @@
 # This file controls who is tagged for review for any given pull request.
 
 # For anything not explicitly taken by someone else:
-* @open-telemetry/demo-approvers
+# Update this with your team or individual GitHub usernames
+* @liteverge/demo-approvers

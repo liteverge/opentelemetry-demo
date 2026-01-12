@@ -53,9 +53,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
-	pb "github.com/open-telemetry/opentelemetry-demo/src/checkout/genproto/oteldemo"
-	"github.com/open-telemetry/opentelemetry-demo/src/checkout/kafka"
-	"github.com/open-telemetry/opentelemetry-demo/src/checkout/money"
+	pb "github.com/liteverge/opentelemetry-demo/src/checkout/genproto/oteldemo"
+	"github.com/liteverge/opentelemetry-demo/src/checkout/kafka"
+	"github.com/liteverge/opentelemetry-demo/src/checkout/money"
 )
 
 //go:generate go install google.golang.org/protobuf/cmd/protoc-gen-go
