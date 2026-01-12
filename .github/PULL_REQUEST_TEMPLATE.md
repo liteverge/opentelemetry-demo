@@ -24,7 +24,7 @@ update to the Demo Helm chart.
 
 Maintainers will not merge until the above have been completed. If you're unsure
 which docs need to be changed ping the
-[@open-telemetry/demo-approvers](https://github.com/orgs/open-telemetry/teams/demo-approvers).
+[@liteverge/demo-approvers](https://github.com/orgs/liteverge/teams/demo-approvers).
 
 [docs]: https://opentelemetry.io/docs/demo/
-[helm-charts]: https://github.com/open-telemetry/opentelemetry-helm-charts
+[helm-charts]: https://github.com/liteverge/opentelemetry-helm-charts

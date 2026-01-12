@@ -36,7 +36,7 @@ through your first contribution.
    channel.
 2. Post in the room with an introduction to yourself, what area you are
    interested in (check issues marked with [help
-   wanted](https://github.com/open-telemetry/opentelemetry-demo/labels/help%20wanted)),
+   wanted](https://github.com/liteverge/opentelemetry-demo/labels/help%20wanted)),
    and say you are looking for a buddy. We will match you with someone who has
    experience in that area.
 
@@ -59,7 +59,7 @@ Ensure you have the following installed:
 ### Clone the Repository
 
 ```sh
-git clone https://github.com/open-telemetry/opentelemetry-demo.git
+git clone https://github.com/liteverge/opentelemetry-demo.git
 cd opentelemetry-demo/
 ```
 
@@ -164,7 +164,7 @@ To create a new PR, fork the project in GitHub and clone the upstream repo:
 > **Pull requests from protected forks will not be accepted.**
 
 ```sh
-git clone https://github.com/open-telemetry/opentelemetry-demo.git
+git clone https://github.com/liteverge/opentelemetry-demo.git
 ```
 
 Navigate to the repo root:
@@ -291,7 +291,7 @@ Maintainers can create a new release when desired by following these steps.
    in `.env` to the _new_ version number based on the format `x.x.x` and merge
    it.
 2. [Create a new
-   release](https://github.com/open-telemetry/opentelemetry-demo/releases/new),
+   release](https://github.com/liteverge/opentelemetry-demo/releases/new),
    creating a new tag for the _new_ version number based on main. Automatically
    generate release notes. Prepend a summary of the major changes to the release
    notes.
